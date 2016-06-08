@@ -64,6 +64,7 @@ namespace Xamarin.Forms.Platform.iOS
 			WeakReference<IVisualElementRenderer> _rendererRef;
 
 			ViewCell _viewCell;
+			internal bool supressSeparator;
 
 			public ViewTableCell(string key) : base(UITableViewCellStyle.Default, key)
 			{
@@ -90,6 +91,12 @@ namespace Xamarin.Forms.Platform.iOS
 				//This sets the content views frame.
 				base.LayoutSubviews();
 
+				if (supressSeparator)
+				{
+					var oldFrame = Frame;
+					ContentView.Bounds = Frame = new RectangleF(oldFrame.Location, new SizeF(oldFrame.Width, oldFrame.Height + 0.5f));
+				}
+
 				var contentFrame = ContentView.Frame;
 				var view = ViewCell.View;
 
@@ -113,8 +120,9 @@ namespace Xamarin.Forms.Platform.iOS
 				var height = size.Height > 0 ? size.Height : double.PositiveInfinity;
 				var result = renderer.Element.Measure(width, height);
 
-				// make sure to add in the separator
-				return new SizeF(size.Width, (float)result.Request.Height + 1f / UIScreen.MainScreen.Scale);
+				// make sure to add in the separator if needed
+				var finalheight = ((float)result.Request.Height + (supressSeparator ? 0f : 1f)) / UIScreen.MainScreen.Scale;
+				return new SizeF(size.Width, finalheight);
 			}
 
 			protected override void Dispose(bool disposing)
